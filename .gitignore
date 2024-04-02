@@ -93,3 +93,4 @@ fabric.properties
 
 .idea/
 .venv/
+__pycache__/
