@@ -102,6 +102,8 @@ def jacobi(A, b, tol=1e-9):
 
         if max_abs_vector(r) < tol:
             break
+        if max_abs_vector(r) > 1e10:
+            break
 
     return x, residual_errors, iterations
 
@@ -127,5 +129,69 @@ def gauss_seidel(A, b, tol=1e-9):
 
         if max_abs_vector(r) < tol:
             break
+        if max_abs_vector(r) > 1e10:
+            break
 
     return x, residual_errors, iterations
+
+
+def create_identity_matrix(n):
+    identity_matrix = [[0] * n for _ in range(n)]
+    for i in range(n):
+        identity_matrix[i][i] = 1
+
+    return identity_matrix
+
+
+def lu_factorization(A):
+    n = len(A[0])
+    L, U = create_identity_matrix(n), [[0 for _ in range(n)] for _ in range(n)]
+    for j in range(n):
+        for i in range(n):
+            sum_ = 0
+            if i <= j:
+                for k in range(i):
+                    sum_ += L[i][k] * U[k][j]
+
+                U[i][j] = A[i][j] - sum_
+            else:
+                for k in range(j):
+                    sum_ += L[i][k] * U[k][j]
+
+                L[i][j] = (A[i][j] - sum_) / U[j][j]
+
+    return L, U
+
+
+def forward_substitution(L, b):
+    n = len(L[0])
+    x = [0 for _ in range(n)]
+    for i in range(n):
+        current_sum = 0
+        for j in range(i):
+            current_sum += L[i][j] * x[j]
+
+        x[i] = (b[i] - current_sum) / L[i][i]
+
+    return x
+
+
+def backward_substitution(U, b):
+    n = len(U[0])
+    x = [0 for _ in range(n)]
+    x[-1] = b[-1] / U[-1][-1]
+    for i in range(n - 2, -1, -1):
+        current_sum = 0
+        for j in range(i + 1, n):
+            current_sum += U[i][j] * x[j]
+
+        x[i] = (b[i] - current_sum) / U[i][i]
+
+    return x
+
+
+def solve_linear_equation_with_lu_factorization(A, b):
+    L, U = lu_factorization(A)
+    y = forward_substitution(L, b)
+    x = backward_substitution(U, y)
+    return x
